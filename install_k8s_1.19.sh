@@ -12,14 +12,14 @@ sleep 3
 nocpus=`lscpu | grep CPU"(s)": | grep -v NUMA | awk '{print $2}'`
 if [ $nocpus -eq 1 ]
 then
-printf "You only have 1 CPU defined which is not enough, increase to at least 2 and then run the script again\n"
+printf "\nYou only have 1 CPU defined which is not enough, increase to at least 2 and then run the script again\n"
 exit 0
 fi
 
 echo ""
-echo "Let's disable Swap first, using swapoff -a and edit the /etc/fstab file..."
+printf "\nLet's disable Swap first, using swapoff -a and edit the /etc/fstab file..."
 swapoff -a
-printf "Did a swapoff -a. Next let's edit the /etc/fstab to comment out the swap line...\n"
+printf "\nDid a swapoff -a. Next let's edit the /etc/fstab to comment out the swap line...\n"
 
 cat /etc/fstab | grep swap | grep "#"
 if [ $? -eq 0 ]
@@ -40,7 +40,7 @@ dockerstatus=`docker ps -a | grep world | awk '{print $2'}`
 if [ $dockerstatus = hello-world ]
 then
 echo $dockerstatus
-printf "looks fine\n"
+printf "\nLooks fine\n"
 fi
 
 repofile=/etc/yum.repos.d/kubernetes.repo
