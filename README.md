@@ -1,6 +1,6 @@
 # IsilonCSI_Driver_v1.4_Full_Installation
-README
-Author: Anjan Dave
+#README
+#Author: Anjan Dave
 #Version: 1.0
 
 Disclaimer:
