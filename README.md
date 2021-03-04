@@ -20,8 +20,8 @@ There are two scripts provided here:
 This script installs latest version of docker on the provided Linux host
 2. install_k8s_1.19.sh
 This script will install the Kubernetes 1.19.8 version for you which is what the Isilon CSI Driver currently supports
-3. install_Isilon_CSI_Driver_1.4
-This file will give you all the necessary steps in a concise form to install the driver
+3. Install_Isilon_CSI_Driver_v1.4.sh
+This script will give you all the necessary steps in a concise form to install the driver
 
 Procedure:
 --------------
@@ -32,6 +32,6 @@ cd IsilonCSI_Driver_v1.4_Full_Installation
 cp *.sh /root/
 ./docker_install.sh (it's interactive script, complete it to get docker working)
 ./install_k8s_1.16.sh (it's interactive script, compleete it to get kubernetes master node working at 1.16.12)
-Follow the CSI_Driver_v1.4_Install.txt
+./Install_Isilon_CSI_Driver_v1.4.sh (Follow the script prompts, or just decipher the commands and run them by hand)
 
 Follow the official DellEMC Isilon CSI Driver 1.4 documentation at: https://github.com/dell/csi-isilon to download the offical installation guide.
