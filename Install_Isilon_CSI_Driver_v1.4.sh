@@ -1,6 +1,6 @@
 #!/bin/bash
 #Author: Anjan Dave
-#Version: 1.1
+#Version: 1.2
 printf "\n\tThis interactive script installs the CSI Driver v1.4. Try to run it once only as there's not a ton of logic built-in to check for already installed components if you re-run the script.\n"
 printf "\nPlease, do NOT use this to install a PRODUCTION environment, this is just to play with the CSI driver!!!!! \n"
 printf "\nNOTE: We are only working with a k8s cluster with just master node, no workers \n"
@@ -32,15 +32,19 @@ sleep 4
 cd /root
 if [ -d "/root/csi-isilon" ]
 then
-        printf "\nThe csi-isilon directory exists already. If you want to install the driver using this script, rename that directory first\n"
+        printf "\nThe csi-isilon directory exists already. If you want to install the driver using this script, rename that directory first, quitting...\n"
         sleep 3
+	exit 0
 else
-        git clone https://github.com/dell/csi-isilon.git
+        printf "\n We will use wget to grab the driver v1.4 package and unzip it in /root/csi-isilon directory\n"
+	wget https://github.com/dell/csi-powerscale/archive/refs/heads/release-1.4.0.zip /root/
+	unzip release-1.4.0.zip
+	mv csi-powerscale-release-1.4.0 /root/csi-isilon
         printf "\nCheck below if you see the csi-isilon directory listed\n"
-        ls /root
+        ls /root/csi-isilon
 fi
 
-
+sleep 4
 printf "Next, we will download the docker.service configuration file from github. This avoids the step wherein you'd have to edit several files, which is error-prone process.\n\n"
 printf "NOTE: The path for this file is based on where docker is installed. If you intalled docker using my scripts you're fine. Otherwise, if those paths are different for you, then hit ctrl+c NOW as we could fail. The paths for files we will work on are: \n"
 printf "/etc/systemd/system/multi-user.target.wants/docker.service \n"
@@ -81,6 +85,7 @@ printf "\nNext, we create the isilon & the test namespace in the k8s cluster \n"
 kubectl create namespace isilon
 kubectl create namespace test
 sleep 4
+
 
 printf "\n\nNext, we install helm3 - will download it in root home and will copy it into /usr/local/bin \n"
 sleep 5
@@ -152,9 +157,10 @@ printf "\n For the next step, following should be ready
 1. Isilon cluster and it's credentials (root or another account with appropriate privs as per CSI Driver Guide
 2. Management IP of the cluster
 3. A path such as /ifs/blah/csi-volumes already created on cluster
+4. No of controller PODs of driver (choose 1 if this is a single node cluster
 \n"
 
-printf "If you're ready with above things, type yes/no: \n\n"
+printf "If you're ready with above things, type yes, otherwise no to quit: \n\n"
 read ready
 if [ $ready = yes ]
 then
@@ -182,10 +188,13 @@ then
 	read mgmtip
 	printf "Enter the Isilon path (e.g. /ifs/cluster/csi) for CSI driver to create it's volumes THIS PATH MUST EXIST ON ISILON: \n"
 	read isilonpath
+	printf "How many controller PODs? - choose 1 if it's a single node cluster, otherwise type 2: \n"
+	read contpods
 	sleep 4
 	printf "Now changing the myvalues.yaml file for the IP and the path you supplied \n\n" 
 	sed -i 's/isiIP: 1.1.1.1/isiIP: '$mgmtip'/' /root/csi-isilon/dell-csi-helm-installer/myvalues.yaml
 	sed -i 's#/ifs/data/csi#'$isilonpath'#' /root/csi-isilon/dell-csi-helm-installer/myvalues.yaml
+	sed -i 's#controllerCount: 2#controllerCount: '$contpods'#' /root/csi-isilon/dell-csi-helm-installer/myvalues.yaml
 	#printf "Now changing volumesnapshotclass.yaml file for the path \n"
 	#sed -i 's#/ifs/data/csi#'$isilonpath'#' /root/csi-isilon/helm/volumesnapshotclass.yaml
 	#printf "\nCheck below if i changed the IP and path correctly, else modify the /root/csi-isilon/helm/myvalues.yaml and volumesnapshotclass.yaml files by hand \n"
@@ -195,7 +204,12 @@ then
 fi
 
 
-printf "\nNext, applying the snapshot-controller CRDs\n"
+printf "\nNext, applyin the snapshot-CRDs \n"
+kubectl apply -f https://raw.githubusercontent.com/kubernetes-csi/external-snapshotter/v3.0.3/client/config/crd/snapshot.storage.k8s.io_volumesnapshotclasses.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubernetes-csi/external-snapshotter/v3.0.3/client/config/crd/snapshot.storage.k8s.io_volumesnapshotcontents.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubernetes-csi/external-snapshotter/v3.0.3/client/config/crd/snapshot.storage.k8s.io_volumesnapshots.yaml
+
+printf "\nNext, applying the snapshot-controller \n"
 kubectl apply -f https://raw.githubusercontent.com/kubernetes-csi/external-snapshotter/v3.0.2/deploy/kubernetes/snapshot-controller/rbac-snapshot-controller.yaml
 kubectl apply -f https://raw.githubusercontent.com/kubernetes-csi/external-snapshotter/v3.0.2/deploy/kubernetes/snapshot-controller/setup-snapshot-controller.yaml
 
@@ -212,7 +226,8 @@ printf "\n\nNext, we run the verify.sh script
 You should get a successful verification message prior to installing the CSI Driver PODs \n"
 echo "----------------------------------------------------------------------"
 echo ""
-/root/csi-isilon/dell-csi-helm-installer/verify.sh --namespace isilon --values /root/csi-isilon/dell-csi-helm-installer/myvalues.yaml --snapshot-crd
+sleep 3
+/root/csi-isilon/dell-csi-helm-installer/verify.sh --namespace isilon --values /root/csi-isilon/dell-csi-helm-installer/myvalues.yaml
 
 
 printf "\nBefore we install the driver, we will take the NoSchedule taint away from the master node - Continue? yes/no: "
@@ -234,7 +249,7 @@ if [ $csicontinue = yes ]
 then
 	cd /root/csi-isilon/dell-csi-helm-installer
 	chmod 755 csi-install.sh
-	/root/csi-isilon/dell-csi-helm-installer/csi-install.sh --namespace isilon --values /root/csi-isilon/dell-csi-helm-installer/myvalues.yaml --snapshot-crd
+	/root/csi-isilon/dell-csi-helm-installer/csi-install.sh --namespace isilon --values /root/csi-isilon/dell-csi-helm-installer/myvalues.yaml
 
 else
 exit 0
