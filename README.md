@@ -27,13 +27,14 @@ Procedure:
 1. Login as root to your CentOS/RHEL 7.7 VM host
 2. Install git (yum install git)
 3. Make sure swap is off (vi /etc/hosts and swapoff -a)
-4. cd /root
-5. git clone https://github.com/acd13/IsilonCSI_Driver_v1.4_Full_Installation.git
-6. cd IsilonCSI_Driver_v1.4_Full_Installation
-7. cp *.sh /root/
-8. chmod 755 *.sh
-9. Install docker first: ./docker_install.sh (it's interactive script, complete it to get docker working)
-10. Install Kubernetes next: ./install_k8s_1.19.sh (it's interactive script, compleete it to get kubernetes master node working at 1.19.8)
-11. Install the CSI driver next: ./Install_Isilon_CSI_Driver_v1.4.sh (Follow the script prompts, or just decipher the commands and run them by hand)
+4. Ensure your VM host name resolves to correct IP and make sure your Isilon cluster can revolve your kubernetes node name
+5. cd /root
+6. git clone https://github.com/acd13/IsilonCSI_Driver_v1.4_Full_Installation.git
+7. cd IsilonCSI_Driver_v1.4_Full_Installation
+8. cp *.sh /root/
+9. chmod 755 *.sh
+10. Install docker first: ./docker_install.sh (it's interactive script, complete it to get docker working)
+11. Install Kubernetes next: ./install_k8s_1.19.sh (it's interactive script, compleete it to get kubernetes master node working at 1.19.8)
+12. Install the CSI driver next: ./Install_Isilon_CSI_Driver_v1.4.sh (Follow the script prompts, or just decipher the commands and run them by hand)
 
 Follow the official DellEMC Isilon CSI Driver 1.4 documentation at: https://github.com/dell/csi-isilon to download the offical installation guide. Note - this github page by default will always reflect the latest driver version, which as of 4/13/2021 is v1.5
