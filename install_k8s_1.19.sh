@@ -12,51 +12,52 @@ sleep 3
 nocpus=`lscpu | grep CPU"(s)": | grep -v NUMA | awk '{print $2}'`
 if [ $nocpus -eq 1 ]
 then
-printf "\nYou only have 1 CPU defined which is not enough, increase to at least 2 and then run the script again\n"
-exit 0
+	printf "\nYou only have 1 CPU defined which is not enough, increase to at least 2 and then run the script again\n"
+	exit 0
 fi
 
 echo ""
 printf "\nLet's disable Swap first, using swapoff -a and edit the /etc/fstab file..."
 swapoff -a
 printf "\nDid a swapoff -a. Next let's edit the /etc/fstab to comment out the swap line...\n"
+sleep 3
 
-cat /etc/fstab | grep swap | grep "#"
 if [ $? -eq 0 ]
 then
-echo "Looks like /etc/fstab line for swap is already commented out, see below"
-cat /etc/fstab | grep swap
+	printf "Looks like /etc/fstab line for swap is already commented out, see below \n"
+	cat /etc/fstab | grep swap
 else
-echo "We need to comment out the swap line in /etc/fstab"
-sed -i 's|\/dev\/mapper\/centos_k8s--faction-swap|#\/dev\/mapper\/centos_k8s--faction-swap|g' /etc/fstab
-echo "Check below line to make sure my sed did it's job, i.e., put a comment on the swap line:"
-cat /etc/fstab | grep swap
+	printf "We need to comment out the swap line in /etc/fstab \n"
+	cp /etc/fstab /etc/fstab.orig
+        swapvar=`grep "swap" /etc/fstab | awk '{print $1}'`
+        sed -i 's|'$swapvar'|#'$swapvar'|g' /etc/fstab
+	printf "Check below line to make sure my sed did it's job, i.e., put a comment on the swap line: \n"
+	cat /etc/fstab | grep swap
 fi
-echo ""
 sleep 3
 
 echo "Let's make sure docker is running specifically hello-world container"
 dockerstatus=`docker ps -a | grep world | awk '{print $2'}`
 if [ $dockerstatus = hello-world ]
 then
-echo $dockerstatus
-printf "\nLooks fine\n"
+	echo $dockerstatus
+	printf "\nLooks fine\n"
 fi
 
 repofile=/etc/yum.repos.d/kubernetes.repo
 if [ -f "$repofile" ]
 then
-echo ""
-echo "Looks like the kubernetes.repo file already exists as below:"
-cat /etc/yum.repos.d/kubernetes.repo
+	echo ""
+	echo "Looks like the kubernetes.repo file already exists as below:"
+	cat /etc/yum.repos.d/kubernetes.repo
 fi
 
 printf "\nProceed next to creating k8s repo config file? yes/no: "
 read ans
 if [ $ans = yes ]
 then
-echo "deleting existing file and recreating"
-rm /etc/yum.repos.d/kubernetes.repo
+	echo "deleting existing file and recreating"
+	rm /etc/yum.repos.d/kubernetes.repo
 cat <<EOF > /etc/yum.repos.d/kubernetes.repo
 [kubernetes]
 name=Kubernetes
@@ -67,8 +68,8 @@ repo_gpgcheck=1
 gpgkey=https://packages.cloud.google.com/yum/doc/yum-key.gpg https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
 exclude=kube*
 EOF
-echo "Done, check below contents of /etc/yum.repos.d/kubernetes.repo..."
-cat /etc/yum.repos.d/kubernetes.repo
+	echo "Done, check below contents of /etc/yum.repos.d/kubernetes.repo..."
+	cat /etc/yum.repos.d/kubernetes.repo
 fi
 
 sleep 3
@@ -78,13 +79,13 @@ setenforce 0
 cat /etc/selinux/config | grep SELINUX=enforcing
 if [ $? -eq 0 ]
 then
-echo "SELINUX needs to be set to permissive instead of enforcing, changing it..."
-sed -i 's/^SELINUX=enforcing$/SELINUX=permissive/' /etc/selinux/config
-echo "check below"
-cat /etc/selinux/config | grep SELINUX=permissive
+	echo "SELINUX needs to be set to permissive instead of enforcing, changing it..."
+	sed -i 's/^SELINUX=enforcing$/SELINUX=permissive/' /etc/selinux/config
+	echo "check below"
+	cat /etc/selinux/config | grep SELINUX=permissive
 else
-printf "\nDone, check below\n"
-cat /etc/selinux/config | grep SELINUX=permissive
+	printf "\nDone, check below\n"
+	cat /etc/selinux/config | grep SELINUX=permissive
 fi
 
 printf "\nNext, let's stop firewalld service and disable it"
@@ -100,8 +101,8 @@ echo "\nProceed with kubernetes package installation? yes/no: "
 read ans2
 if [ $ans2 = yes ]
 then
-printf "\nNow we install the k8s 1.19.8 packages..."
-yum install -y kubelet-1.19.8-0 kubeadm-1.19.8-0 kubectl-1.19.8-0 --disableexcludes=kubernetes
+	printf "\nNow we install the k8s 1.19.8 packages..."
+	yum install -y kubelet-1.19.8-0 kubeadm-1.19.8-0 kubectl-1.19.8-0 --disableexcludes=kubernetes
 fi
 
 printf "\nEnable kubelete service with command: systemctl enable --now kubelet..."
@@ -116,7 +117,7 @@ echo "Based on above output, proceed with modifying k8s.conf? yes/no: "
 read ans3
 if [ $ans3 = yes ]
 then
-rm -rf /etc/sysctl.d/k8s.conf
+	rm -rf /etc/sysctl.d/k8s.conf
 cat <<EOF > /etc/sysctl.d/k8s.conf
 net.bridge.bridge-nf-call-ip6tables = 1
 net.bridge.bridge-nf-call-iptables = 1
@@ -141,8 +142,8 @@ printf "Initialize the kubernetes cluster now? yes/no: "
 read ans4
 if [ $ans4 = yes ]
 then
-kubeadm init --pod-network-cidr=10.244.0.0/16
-printf "\n\nIf in above output, you did not see successful initialization, then stop here and troubleshoot!\n"
+	kubeadm init --pod-network-cidr=10.244.0.0/16
+	printf "\n\nIf in above output, you did not see successful initialization, then stop here and troubleshoot!\n"
 fi
 
 printf "\nCopying admin.conf, in .kube directory...\n"
@@ -154,7 +155,7 @@ printf "done.\n"
 cat /root/.bash_profile | grep KUBECONFIG
 if [ $? = 1 ]
 then
-echo "export KUBECONFIG=/etc/kubernetes/admin.conf" >> /root/.bash_profile
+	echo "export KUBECONFIG=/etc/kubernetes/admin.conf" >> /root/.bash_profile
 fi
 
 printf "\nCheck kubectl get nodes output below, it may take a few mins for Master node to be in Ready state\n"
@@ -170,13 +171,14 @@ printf "\nNow we apply the Weave-net network to the cluster\n"
 kubectl get pods -A | grep weave-net
 if [ $? -eq 0 ]
 then
-printf "\nLooks like you've already installed weave-net in prior step, installing it again may not help\n"
+	printf "\nLooks like you've already installed weave-net in prior step, installing it again may not help\n"
 fi
+
 printf "Proceed with weave-net? yes/no: "
 read ans5
 if [ $ans5 = yes ]
 then
-kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version=$(kubectl version | base64 | tr -d '\n')"
+	kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version=$(kubectl version | base64 | tr -d '\n')"
 fi
 
 printf "\n\t At this point, your k8s master node and the pods should be fine. Check below outputs, if the master node is not in Ready status or if any of the PODS are not in Running status, then give it few mins otherwise it needs to be troubleshooted\n"

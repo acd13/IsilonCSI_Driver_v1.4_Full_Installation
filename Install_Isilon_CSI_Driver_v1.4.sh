@@ -26,7 +26,7 @@ else
 fi
 
 
-#GIT Clone the CSI Driver - here we could fail in future if the driver files get updated
+#GIT Clone the CSI Driver - here we could fail in future if the driver files get updated, so doing a download of package
 printf "\nNext, we clone the CSI Driver repo, if it doesn't exist, using git in /root. It will create a csi-install dir... \n"
 sleep 4
 cd /root
@@ -100,23 +100,24 @@ helm list
 
 
 #Below function is to handle the secret.yaml file mainly
+
 function secretstuff
 {
 
 kubectl get secret -n isilon | grep isilon-creds
 if [ $? -eq 0 ]
 then
-	printf "Looks like the secret is already created, skipping... \n"
-	:
+        printf "Looks like the secret is already created, skipping... \n"
+        :
 else
-	printf "Let's create the secret.yaml file first \n"
-	sleep 4
-	printf "Enter Isilon username for CSI Driver (that has all the privs): \n"
-	read isiuser
-	printf "Enter the password for this account: \n"
-	read isipasswd
-	myisiuser=`echo -n "$isiuser" | base64`
-	myisipasswd=`echo -n "$isipasswd" | base64`
+        printf "Let's create the secret.yaml file first \n"
+        sleep 4
+        printf "Enter Isilon username for CSI Driver (that has all the privs): \n"
+        read isiuser
+        printf "Enter the password for this account: \n"
+        read isipasswd
+        myisiuser=`echo -n "$isiuser" | base64`
+        myisipasswd=`echo -n "$isipasswd" | base64`
 
 cat <<EOF > /root/secret.yaml
 apiVersion: v1
@@ -132,25 +133,27 @@ data:
   password: passid
 EOF
 
-	sed -i 's/userid/'$myisiuser'/' /root/secret.yaml
-	sed -i 's/passid/'$myisipasswd'/' /root/secret.yaml
-	printf "\n Below is the secret.yaml file, will invoke it in k8s now \n"
-	cat /root/secret.yaml
-	echo ""
-	kubectl create -f /root/secret.yaml
-	kubectl get secret -n isilon | grep isilon-creds
+        sed -i 's/userid/'$myisiuser'/' /root/secret.yaml
+        sed -i 's/passid/'$myisipasswd'/' /root/secret.yaml
+        printf "\n Below is the secret.yaml file, will invoke it in k8s now \n"
+        cat /root/secret.yaml
+        echo ""
+        kubectl create -f /root/secret.yaml
+        kubectl get secret -n isilon | grep isilon-creds
 
 
 fi
 
 } #End of function
 
+
+
 #Call the secretstuff function defined above
 secretstuff
 
 
 printf "\n Now creating an empty secret as per official CSI driver instructions"
-kubectl create -f /root/csi-isilon/helm/emptysecret.yaml
+kubectl create -f /root/csi-powerscale/helm/emptysecret.yaml
 
 
 printf "\n For the next step, following should be ready
@@ -190,11 +193,14 @@ then
 	read isilonpath
 	printf "How many controller PODs? - choose 1 if it's a single node cluster, otherwise type 2: \n"
 	read contpods
+	printf "Enforce nfsV3? - recommended, type ->true<-, otherwise type false make sure v4 is setup on the Isilon cluster: \n"
+	read nfsversion
 	sleep 4
 	printf "Now changing the myvalues.yaml file for the IP and the path you supplied \n\n" 
 	sed -i 's/isiIP: 1.1.1.1/isiIP: '$mgmtip'/' /root/csi-isilon/dell-csi-helm-installer/myvalues.yaml
 	sed -i 's#/ifs/data/csi#'$isilonpath'#' /root/csi-isilon/dell-csi-helm-installer/myvalues.yaml
 	sed -i 's#controllerCount: 2#controllerCount: '$contpods'#' /root/csi-isilon/dell-csi-helm-installer/myvalues.yaml
+	sed -i 's#nfsV3: "true"#nfsV3: '$nfsversion'#' /root/csi-isilon/dell-csi-helm-installer/myvalues.yaml
 	#printf "Now changing volumesnapshotclass.yaml file for the path \n"
 	#sed -i 's#/ifs/data/csi#'$isilonpath'#' /root/csi-isilon/helm/volumesnapshotclass.yaml
 	#printf "\nCheck below if i changed the IP and path correctly, else modify the /root/csi-isilon/helm/myvalues.yaml and volumesnapshotclass.yaml files by hand \n"
