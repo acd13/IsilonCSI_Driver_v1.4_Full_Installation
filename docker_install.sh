@@ -25,6 +25,7 @@ swapoff -a
 printf "\n Did a swapoff -a. Next let's edit the /etc/fstab to comment out the swap line...\n"
 sleep 3
 
+cat /etc/fstab | grep swap | grep "#"
 if [ $? -eq 0 ]
 then
 	printf "\nLooks like /etc/fstab line for swap is already commented out, see below\n"
