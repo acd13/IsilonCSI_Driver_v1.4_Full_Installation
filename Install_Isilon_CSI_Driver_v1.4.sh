@@ -200,7 +200,7 @@ then
 	sed -i 's/isiIP: 1.1.1.1/isiIP: '$mgmtip'/' /root/csi-isilon/dell-csi-helm-installer/myvalues.yaml
 	sed -i 's#/ifs/data/csi#'$isilonpath'#' /root/csi-isilon/dell-csi-helm-installer/myvalues.yaml
 	sed -i 's#controllerCount: 2#controllerCount: '$contpods'#' /root/csi-isilon/dell-csi-helm-installer/myvalues.yaml
-	sed -i 's#nfsV3: "true"#nfsV3: '$nfsversion'#' /root/csi-isilon/dell-csi-helm-installer/myvalues.yaml
+	sed -i 's#nfsV3: "false"#nfsV3: '$nfsversion'#' /root/csi-isilon/dell-csi-helm-installer/myvalues.yaml
 	#printf "Now changing volumesnapshotclass.yaml file for the path \n"
 	#sed -i 's#/ifs/data/csi#'$isilonpath'#' /root/csi-isilon/helm/volumesnapshotclass.yaml
 	#printf "\nCheck below if i changed the IP and path correctly, else modify the /root/csi-isilon/helm/myvalues.yaml and volumesnapshotclass.yaml files by hand \n"
