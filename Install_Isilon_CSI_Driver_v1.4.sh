@@ -153,7 +153,7 @@ secretstuff
 
 
 printf "\n Now creating an empty secret as per official CSI driver instructions"
-kubectl create -f /root/csi-powerscale/helm/emptysecret.yaml
+kubectl create -f /root/csi-isilon/helm/emptysecret.yaml
 
 
 printf "\n For the next step, following should be ready
@@ -204,7 +204,7 @@ then
 	#printf "Now changing volumesnapshotclass.yaml file for the path \n"
 	#sed -i 's#/ifs/data/csi#'$isilonpath'#' /root/csi-isilon/helm/volumesnapshotclass.yaml
 	#printf "\nCheck below if i changed the IP and path correctly, else modify the /root/csi-isilon/helm/myvalues.yaml and volumesnapshotclass.yaml files by hand \n"
-	cat /root/csi-isilon/dell-csi-helm-installer/myvalues.yaml | egrep "isiIP:|isiPath"
+	cat /root/csi-isilon/dell-csi-helm-installer/myvalues.yaml | egrep "isiIP:|isiPath|nfsV3"
 	echo ""
 	#cat /root/csi-isilon/helm/volumesnapshotclass.yaml | grep IsiPath
 fi
